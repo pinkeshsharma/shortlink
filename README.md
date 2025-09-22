@@ -34,6 +34,7 @@ docker-compose down
 ```sh
 docker-compose down -v
 ```
+This removes database and redis data.
 
 ---
 
@@ -42,4 +43,4 @@ Developed by **Pinkesh Sharma**
 [GitHub Profile](https://github.com/pinkeshsharma)
 
 
-This removes database and redis data.
+
