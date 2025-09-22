@@ -1,0 +1,4 @@
+com\shortlink\controller\ShortLinkControllerTest.class
+com\shortlink\service\ShortLinkServiceImplTest.class
+com\shortlink\controller\ShortLinkControllerTest$TestConfig.class
+com\shortlink\ShortLinkApplicationTests.class
