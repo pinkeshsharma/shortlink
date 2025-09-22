@@ -1,6 +1,4 @@
-# URL Shortener – Main README
-
-This project implements a multi-tenant URL shortener using Spring Boot, PostgreSQL, and Redis.
+# URL Shortener Service README
 
 Documentation is split into multiple files for clarity:
 

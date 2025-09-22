@@ -1,4 +1,6 @@
-# Shortlink Full Stack (Service + UI + DB + Redis)
+# URL Shortener – Main README
+
+This project implements a multi-tenant URL shortener using React App, Spring Boot, PostgreSQL, and Redis.
 
 This project runs the complete shortlink system:
 - **Postgres** (DB)

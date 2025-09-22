@@ -14,7 +14,7 @@ Services:
 ## Run locally
 
 ```bash
-./mvnw spring-boot:run
+./mvnw clean spring-boot:run
 ```
 
 ## Testing
