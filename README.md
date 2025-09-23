@@ -74,3 +74,9 @@ This removes **Postgres** and **Redis** data.
     - `nginx-java.conf` → proxies to Java backend
     - `nginx-python.conf` → proxies to Python backend
 - The UI automatically switches backend depending on the profile used at startup.
+
+---
+
+## 👤 Author
+Developed by **Pinkesh Sharma**  
+[GitHub Profile](https://github.com/pinkeshsharma)
