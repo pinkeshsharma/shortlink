@@ -12,7 +12,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d shortenerdb" ]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d shortenerdb"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -27,7 +27,7 @@ services:
     ports:
       - "6379:6379"
     healthcheck:
-      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -35,7 +35,9 @@ services:
     networks:
       - shortlink-net
 
+  # Java backend
   shortener-service:
+    profiles: ["java"]
     build:
       context: ./service
       dockerfile: docker/dockerfile
@@ -63,16 +65,60 @@ services:
     networks:
       - shortlink-net
 
-  shortlink-ui:
+  # Python backend
+  shortener-python:
+    profiles: ["python"]
+    build:
+      context: ./service-python
+      dockerfile: Dockerfile
+    container_name: shortener-python
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/shortenerdb
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    networks:
+      - shortlink-net
+
+  # UI for Java backend
+  shortlink-ui-java:
+    profiles: ["java"]
     build:
       context: ./shortlink-ui
       dockerfile: Dockerfile
-    container_name: shortlink-ui
+    container_name: shortlink-ui-java
     restart: always
     depends_on:
       - shortener-service
     ports:
       - "3000:80"
+    volumes:
+      - ./shortlink-ui/nginx-java.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - shortlink-net
+
+  # UI for Python backend
+  shortlink-ui-python:
+    profiles: ["python"]
+    build:
+      context: ./shortlink-ui
+      dockerfile: Dockerfile
+    container_name: shortlink-ui-python
+    restart: always
+    depends_on:
+      - shortener-python
+    ports:
+      - "3000:80"
+    volumes:
+      - ./shortlink-ui/nginx-python.conf:/etc/nginx/conf.d/default.conf
     networks:
       - shortlink-net
 

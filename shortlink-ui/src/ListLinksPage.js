@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "/api";
+
 function ListLinksPage() {
   const [links, setLinks] = useState([]);
   const [page, setPage] = useState(0);
@@ -7,24 +9,39 @@ function ListLinksPage() {
 
   const fetchLinks = async (pageNumber = 0) => {
     try {
-      const res = await fetch(`http://localhost:8080/links?page=${pageNumber}&size=5`);
+      const res = await fetch(`${API_BASE_URL}/links?page=${pageNumber}&size=5`);
       if (!res.ok) throw new Error("Failed to fetch links");
       const data = await res.json();
 
-      setLinks(data.content);
-      setPage(data.pageable.pageNumber);
-      setTotalPages(data.totalPages);
+      // Normalize Java (Spring Boot) vs Python (custom)
+      if (data.content) {
+        setLinks(data.content || []);
+        setPage(data.pageable?.pageNumber ?? pageNumber);
+        setTotalPages(data.totalPages ?? 0);
+      } else if (data.items) {
+        setLinks(data.items || []);
+        setPage(data.page ?? pageNumber);
+        setTotalPages(Math.ceil((data.total ?? 0) / (data.size ?? 5)));
+      } else {
+        setLinks([]);
+        setPage(0);
+        setTotalPages(0);
+      }
     } catch (err) {
       console.error(err);
+      setLinks([]);
+      setPage(0);
+      setTotalPages(0);
     }
   };
 
   useEffect(() => {
-    fetchLinks(page);
+    fetchLinks(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const truncate = (str, max = 50) =>
-    str.length > max ? str.substring(0, max) + "…" : str;
+    str && str.length > max ? str.substring(0, max) + "…" : str;
 
   return (
     <div style={styles.container}>
@@ -33,71 +50,64 @@ function ListLinksPage() {
       <table style={styles.table}>
         <thead>
           <tr>
-            <th style={styles.th}>ID</th>
-            <th style={styles.th}>Original URL</th>
             <th style={styles.th}>Short URL</th>
-            <th style={styles.th}>Tenant</th>
+            <th style={styles.th}>Original URL</th>
             <th style={styles.th}>Created At</th>
             <th style={styles.th}>Expires At</th>
           </tr>
         </thead>
         <tbody>
           {links.length > 0 ? (
-            links.map((link) => (
-              <tr key={link.id} style={styles.row}>
-                <td style={styles.td}>{link.id.slice(0, 8)}...</td>
-                <td style={styles.td}>
-                  <a
-                    href={link.originalUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={styles.link}
-                    title={link.originalUrl} // ✅ tooltip with full link
-                  >
-                    {truncate(link.originalUrl, 50)}
-                  </a>
-                </td>
-                <td style={styles.td}>
-                  <a
-                    href={`${link.domain}/s/${link.shortCode}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={styles.shortLink}
-                    title={`${link.domain}/s/${link.shortCode}`}
-                  >
-                    {`${link.domain}/s/${link.shortCode}`}
-                  </a>
-                </td>
-                <td style={styles.td}>{link.tenantId}</td>
-                <td style={styles.td}>
-                  {new Date(link.createdAt).toLocaleString()}
-                </td>
-                <td style={styles.td}>
-                  {link.expiresAt
-                    ? new Date(link.expiresAt).toLocaleString()
-                    : "Never"}
-                </td>
-              </tr>
-            ))
+            links.map((link, index) => {
+              const path = link.shortUrl
+                ? new URL(link.shortUrl).pathname
+                : `/s/${link.shortCode}`;
+              const display = `${window.location.origin}${path}`;
+
+              return (
+                <tr key={index} style={styles.row}>
+                  <td style={styles.td}>
+                    <a href={display} target="_blank" rel="noopener noreferrer" style={styles.shortLink}>
+                      {display}
+                    </a>
+                  </td>
+                  <td style={styles.td}>
+                    <a
+                      href={link.originalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={styles.link}
+                      title={link.originalUrl}
+                    >
+                      {truncate(link.originalUrl, 50)}
+                    </a>
+                  </td>
+                  <td style={styles.td}>
+                    {link.createdAt
+                      ? new Date(link.createdAt).toLocaleString()
+                      : "—"}
+                  </td>
+                  <td style={styles.td}>
+                    {link.expiresAt
+                      ? new Date(link.expiresAt).toLocaleString()
+                      : "Never"}
+                  </td>
+                </tr>
+              );
+            })
           ) : (
             <tr>
-              <td colSpan="6" style={styles.empty}>
-                No links found
-              </td>
+              <td colSpan="4" style={styles.empty}>No links found</td>
             </tr>
           )}
         </tbody>
       </table>
 
-      {/* Pagination */}
       <div style={styles.pagination}>
         <button
           onClick={() => fetchLinks(page - 1)}
           disabled={page === 0}
-          style={{
-            ...styles.button,
-            ...(page === 0 ? styles.buttonDisabled : {}),
-          }}
+          style={{ ...styles.button, ...(page === 0 ? styles.buttonDisabled : {}) }}
         >
           ⬅ Previous
         </button>
@@ -109,10 +119,7 @@ function ListLinksPage() {
         <button
           onClick={() => fetchLinks(page + 1)}
           disabled={page + 1 >= totalPages}
-          style={{
-            ...styles.button,
-            ...(page + 1 >= totalPages ? styles.buttonDisabled : {}),
-          }}
+          style={{ ...styles.button, ...(page + 1 >= totalPages ? styles.buttonDisabled : {}) }}
         >
           Next ➡
         </button>
@@ -143,22 +150,12 @@ const styles = {
     borderRadius: "10px",
     overflow: "hidden",
     border: "1px solid #ddd",
-    tableLayout: "fixed", // ✅ prevents stretching
-    wordWrap: "break-word", // ✅ handles long text gracefully
+    tableLayout: "fixed",
+    wordWrap: "break-word",
   },
-  row: {
-    backgroundColor: "#fff",
-    borderBottom: "1px solid #eee",
-  },
-  link: {
-    color: "#007bff",
-    textDecoration: "none",
-  },
-  shortLink: {
-    color: "#28a745",
-    fontWeight: "bold",
-    textDecoration: "none",
-  },
+  row: { backgroundColor: "#fff", borderBottom: "1px solid #eee" },
+  link: { color: "#007bff", textDecoration: "none" },
+  shortLink: { color: "#28a745", fontWeight: "bold", textDecoration: "none" },
   th: {
     padding: "14px",
     fontWeight: "600",
@@ -172,13 +169,9 @@ const styles = {
     borderBottom: "1px solid #ddd",
     whiteSpace: "nowrap",
     overflow: "hidden",
-    textOverflow: "ellipsis", // ✅ adds … for long text
+    textOverflow: "ellipsis",
   },
-  empty: {
-    textAlign: "center",
-    padding: "20px",
-    color: "#999",
-  },
+  empty: { textAlign: "center", padding: "20px", color: "#999" },
   pagination: {
     marginTop: "25px",
     display: "flex",
@@ -196,14 +189,8 @@ const styles = {
     fontSize: "14px",
     boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
   },
-  buttonDisabled: {
-    backgroundColor: "#ccc",
-    cursor: "not-allowed",
-  },
-  pageText: {
-    fontWeight: "500",
-    fontSize: "15px",
-  },
+  buttonDisabled: { backgroundColor: "#ccc", cursor: "not-allowed" },
+  pageText: { fontWeight: "500", fontSize: "15px" },
 };
 
 export default ListLinksPage;

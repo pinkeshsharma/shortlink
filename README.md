@@ -1,38 +1,76 @@
 # URL Shortener – Main README
 
-This project implements a multi-tenant URL shortener using React App, Spring Boot, PostgreSQL, and Redis.
+This project implements a **multi-tenant URL shortener** using:
 
-This project runs the complete shortlink system:
 - **Postgres** (DB)
 - **Redis** (cache)
-- **Spring Boot Service** (backend API)
+- **Backend API**
+    - Java → Spring Boot (`shortener-service`)
+    - Python → FastAPI (`shortener-python`)
 - **React App** (frontend UI)
+
+The system supports running either **Java** or **Python** backend, selectable via Docker profiles.
+
+---
 
 ## How to Run
 
 From the project root (where this `docker-compose.yml` lives):
 
+### Run with **Java backend**
 ```sh
-docker-compose build
-docker-compose up
+docker compose --profile java up --build
 ```
 
-This will start all services:
-- UI → [http://localhost:3000](http://localhost:3000)  
-- Backend API → [http://localhost:8080](http://localhost:8080)  
-- Postgres DB → `localhost:5432` (user: `postgres`, pass: `postgres`, db: `shortenerdb`)  
-- Redis → `localhost:6379`
-
-## Stop
-
+### Run with **Python backend**
 ```sh
-docker-compose down
+docker compose --profile python up --build
 ```
 
-## Clean volumes (optional)
+---
+
+## Services
+
+- **UI**
+    - [http://localhost:3000](http://localhost:3000)
+    - Proxies API requests via `/api` to the active backend (Java or Python).
+
+- **Backend API**
+    - Java: [http://localhost:8080](http://localhost:8080)
+    - Python: [http://localhost:8000](http://localhost:8000)
+
+- **Postgres DB**
+    - `localhost:5432`
+    - User: `postgres`
+    - Password: `postgres`
+    - Database: `shortenerdb`
+
+- **Redis**
+    - `localhost:6379`
+
+---
+
+## Stop Services
 
 ```sh
-docker-compose down -v
+docker compose down
 ```
 
-This removes database and redis data.
+---
+
+## Clean Volumes (optional)
+
+```sh
+docker compose down -v
+```
+
+This removes **Postgres** and **Redis** data.
+
+---
+
+## Notes
+
+- Nginx configs are provided for both profiles:
+    - `nginx-java.conf` → proxies to Java backend
+    - `nginx-python.conf` → proxies to Python backend
+- The UI automatically switches backend depending on the profile used at startup.
