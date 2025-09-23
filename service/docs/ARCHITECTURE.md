@@ -12,14 +12,14 @@ The system is built with:
 ```
 main
 ├─ java.com.shortlink
-   ├─ ShortLinkApplication.java
-   ├─ ServletInitializer.java
-   ├─ config/RedisConfig.java, CorsConfig.java
-   ├─ controller/ShortLinkController.java
-   ├─ dto/ShortLinkRequest.java, ShortLinkResponse.java
-   ├─ db/entity/ShortLink.java, DeadLetter.java
-   ├─ db/ShortLinkRepository.java, DeadLetterRepository.java
-   └─ service/ShortLinkService.java, ShortLinkServiceImpl.java
+│  ├─ ShortLinkApplication.java
+│  ├─ ServletInitializer.java
+│  ├─ config/RedisConfig.java, CorsConfig.java
+│  ├─ controller/ShortLinkController.java
+│  ├─ dto/ShortLinkRequest.java, ShortLinkResponse.java
+│  ├─ db/entity/ShortLink.java, DeadLetter.java
+│  ├─ db/ShortLinkRepository.java, DeadLetterRepository.java
+│  └─ service/ShortLinkService.java, ShortLinkServiceImpl.java
 └─ resources
     ├─ application.yml
     └─ schema.sql
