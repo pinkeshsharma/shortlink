@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from app.db.models import ShortLink
 from app.db.redis_client import redis_client
+from datetime import datetime, timedelta
 
 
 # Default expiry: 30 days in ms
