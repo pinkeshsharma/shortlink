@@ -52,6 +52,8 @@ function ListLinksPage() {
           <tr>
             <th style={styles.th}>Short URL</th>
             <th style={styles.th}>Original URL</th>
+            <th style={styles.th}>Tenant Id</th>
+            <th style={styles.th}>Domain</th>
             <th style={styles.th}>Created At</th>
             <th style={styles.th}>Expires At</th>
           </tr>
@@ -81,6 +83,12 @@ function ListLinksPage() {
                     >
                       {truncate(link.originalUrl, 50)}
                     </a>
+                  </td>
+                  <td style={styles.td}>
+                    {link.tenantId}
+                  </td>
+                  <td style={styles.td}>
+                    {link.domain}
                   </td>
                   <td style={styles.td}>
                     {link.createdAt

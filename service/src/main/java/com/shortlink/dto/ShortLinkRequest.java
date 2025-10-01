@@ -14,4 +14,6 @@ public class ShortLinkRequest {
     @NotBlank
     private String originalUrl;
     private String customCode;
+    private String domain;
+    private long expiresAt;
 }

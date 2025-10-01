@@ -41,7 +41,7 @@ class ShortLinkServiceImplTest {
         when(shortLinkRepository.findByOriginalUrlAndTenantId(any(), any()))
                 .thenReturn(Optional.empty());
 
-        String code = service.createOrGetShortCode("example.com/page", null, "tenant1", "short.ly");
+        String code = service.createOrGetShortCode("example.com/page", null, "tenant1", "short.ly", 0);
         assertNotNull(code);
         verify(shortLinkRepository).save(argThat(sl -> sl.getOriginalUrl().startsWith("http://")));
     }
@@ -51,7 +51,7 @@ class ShortLinkServiceImplTest {
         when(shortLinkRepository.findByOriginalUrlAndTenantId(any(), any()))
                 .thenReturn(Optional.empty());
 
-        String code = service.createOrGetShortCode("https://secure.com", null, "tenant1", "short.ly");
+        String code = service.createOrGetShortCode("https://secure.com", null, "tenant1", "short.ly", 0);
         assertNotNull(code);
         verify(shortLinkRepository).save(argThat(sl -> sl.getOriginalUrl().equals("https://secure.com")));
     }
@@ -59,7 +59,7 @@ class ShortLinkServiceImplTest {
     @Test
     void testInvalidUrlGoesToDeadLetterQueue() {
         assertThrows(IllegalArgumentException.class, () ->
-                service.createOrGetShortCode(":::::/invalid", null, "tenant1", "short.ly")
+                service.createOrGetShortCode(":::::/invalid", null, "tenant1", "short.ly", 0)
         );
         verify(deadLetterRepository).save(any());
     }
@@ -80,8 +80,8 @@ class ShortLinkServiceImplTest {
         when(shortLinkRepository.findByOriginalUrlAndTenantId(url, tenantId))
                 .thenReturn(Optional.of(existingLink));
 
-        String firstCode = service.createOrGetShortCode(url, null, tenantId, domain);
-        String secondCode = service.createOrGetShortCode(url, null, tenantId, domain);
+        String firstCode = service.createOrGetShortCode(url, null, tenantId, domain, 0);
+        String secondCode = service.createOrGetShortCode(url, null, tenantId, domain, 0);
 
         assertEquals(existingCode, firstCode);
         assertEquals(existingCode, secondCode);
@@ -97,7 +97,7 @@ class ShortLinkServiceImplTest {
         when(shortLinkRepository.findByOriginalUrlAndTenantId(url, tenantId))
                 .thenReturn(Optional.empty());
 
-        String code = service.createOrGetShortCode(url, null, tenantId, domain);
+        String code = service.createOrGetShortCode(url, null, tenantId, domain, 0);
 
         // Verify save was called for new entry
         verify(shortLinkRepository, times(1)).save(any(ShortLink.class));

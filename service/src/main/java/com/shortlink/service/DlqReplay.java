@@ -23,7 +23,8 @@ public class DlqReplay  implements CommandLineRunner {
     public void run(String... args) {
         for (DeadLetter msg : dlqRepo.findAll()) {
             try {
-                service.createOrGetShortCode(msg.getOriginalUrl(), msg.getCustomCode(), msg.getTenantId(), msg.getDomain());
+                service.createOrGetShortCode(msg.getOriginalUrl(), msg.getCustomCode(), msg.getTenantId(),
+                        msg.getDomain(), msg.getExpiresAt());
                 dlqRepo.delete(msg);
             } catch (Exception e) {
                 log.warn("Failed to reprocess DLQ entry id={} url={} reason={}",

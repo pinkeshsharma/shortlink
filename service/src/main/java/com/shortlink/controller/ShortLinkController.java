@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 public class ShortLinkController {
@@ -27,10 +26,12 @@ public class ShortLinkController {
 
     @PostMapping("/shorten")
     public ResponseEntity<ShortLinkResponse> createShortLink(@RequestBody ShortLinkRequest request, HttpServletRequest httpRequest) {
-        String tenantId = "defaultTenant";
+        String tenantId = httpRequest.getHeader("X-Tenant-ID").isBlank() ?
+                "defaultTenant" : httpRequest.getHeader("X-Tenant-ID");
 
         // Build base domain from the incoming request
-        String domain = ServletUriComponentsBuilder.fromRequestUri(httpRequest)
+        String domain = request.getDomain() != null ? request.getDomain() :
+                ServletUriComponentsBuilder.fromRequestUri(httpRequest)
                 .replacePath(null)
                 .build()
                 .toUriString();
@@ -39,7 +40,8 @@ public class ShortLinkController {
                 request.getOriginalUrl(),
                 request.getCustomCode(),
                 tenantId,
-                domain
+                domain,
+                request.getExpiresAt()
         );
 
         String shortUrl = domain + "/s/" + code;
@@ -48,9 +50,11 @@ public class ShortLinkController {
 
     @GetMapping({"/{shortCode}", "/s/{shortCode}"})
     public ResponseEntity<Void> redirect(
-            @PathVariable("shortCode") String shortCode) {
+            @PathVariable("shortCode") String shortCode, HttpServletRequest httpRequest) {
+        String tenantId = httpRequest.getHeader("X-Tenant-ID").isBlank() ?
+                "defaultTenant" : httpRequest.getHeader("X-Tenant-ID");
 
-        ShortLink link = shortLinkService.getByShortCode(shortCode, "defaultTenant");
+        ShortLink link = shortLinkService.getByShortCode(shortCode, tenantId);
 
         return ResponseEntity.status(301)
                 .location(URI.create(link.getOriginalUrl()))
@@ -58,12 +62,15 @@ public class ShortLinkController {
     }
 
     @GetMapping("/links")
-    public ResponseEntity<Page<ShortLink>> listLinks(
+    public ResponseEntity<Page<ShortLink>> listLinks(HttpServletRequest httpRequest,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
 
+        String tenantId = httpRequest.getHeader("X-Tenant-ID").isBlank() ?
+                "defaultTenant" : httpRequest.getHeader("X-Tenant-ID");
+
         Pageable pageable = PageRequest.of(page, size);
-        Page<ShortLink> result = shortLinkService.getAllLinks(pageable);
+        Page<ShortLink> result = shortLinkService.getAllLinks(tenantId, pageable);
 
         return ResponseEntity.ok(result);
     }

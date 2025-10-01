@@ -1,6 +1,8 @@
 package com.shortlink.db;
 
 import com.shortlink.db.entity.ShortLink;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,4 +13,6 @@ public interface ShortLinkRepository extends JpaRepository<ShortLink, String> {
     Optional<ShortLink> findByShortCodeAndTenantId(String shortCode, String tenantId);
 
     Optional<ShortLink> findByOriginalUrlAndTenantId(String url, String tenantId);
+
+    Page<ShortLink> findByTenantId(String tenantId, Pageable pageable);
 }

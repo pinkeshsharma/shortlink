@@ -13,8 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,12 +35,13 @@ public class ShortLinkServiceImpl implements ShortLinkService {
     public String createOrGetShortCode(String originalUrl,
                                        String customCode,
                                        String tenantId,
-                                       String domain) {
+                                       String domain,
+                                       long expiresAt) {
         String normalizedUrl;
         try {
             normalizedUrl = normalize(originalUrl);
         } catch (Exception e) {
-            dlqRepo.save(new DeadLetter(originalUrl, domain, customCode, tenantId, "Invalid URL"));
+            dlqRepo.save(new DeadLetter(originalUrl, domain, customCode, tenantId, "Invalid URL", expiresAt));
             throw new IllegalArgumentException("Invalid URL");
         }
 
@@ -61,8 +60,12 @@ public class ShortLinkServiceImpl implements ShortLinkService {
         entity.setDomain(domain);
         entity.setShortCode(shortCode);
 
-        // TTL 30 days
-        entity.setExpiresAt(System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000));
+        if (expiresAt > 0) {
+            entity.setExpiresAt(expiresAt);
+        } else {
+            // TTL 30 days
+            entity.setExpiresAt(System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000));
+        }
 
         repository.save(entity);
 
@@ -86,8 +89,8 @@ public class ShortLinkServiceImpl implements ShortLinkService {
     }
 
     @Override
-    public Page<ShortLink> getAllLinks(Pageable pageable) {
-        return repository.findAll(pageable);
+    public Page<ShortLink> getAllLinks(String tenantId, Pageable pageable) {
+        return repository.findByTenantId(tenantId, pageable);
     }
 
     private String normalize(String url) throws URISyntaxException {

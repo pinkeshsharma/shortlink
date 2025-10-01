@@ -1,4 +1,7 @@
 from fastapi.testclient import TestClient
+
+from app.db.database import get_db
+from app.db.models import ShortLink
 from app.main import app
 import time
 
@@ -89,3 +92,39 @@ def test_list_links_pagination_and_delete():
     # Delete again should 404
     del_res2 = client.delete(f"/shortlinks/{code}")
     assert del_res2.status_code == 404
+
+def test_list_links_and_verify_values():
+    db = next(get_db())
+    db.query(ShortLink).delete()
+    db.commit()
+
+    links = []
+    for i in range(3):
+        payload = {
+            "originalUrl": f"https://verify.com/{i}",
+            "tenantId": "defaultTenant",
+            "domain": "http://localhost:8000",
+        }
+        res = client.post("/shorten", json=payload)
+        assert res.status_code == 200
+        data = res.json()
+        links.append(data)
+
+    res = client.get("/links?page=0&size=3")
+    assert res.status_code == 200
+    body = res.json()
+
+    assert body["size"] == 3
+    assert body["total"] >= 3
+    assert len(body["items"]) == 3
+
+    # Verify each link's values
+    for i, item in enumerate(body["items"]):
+        assert item["originalUrl"].startswith("https://verify.com/")
+        assert item["tenantId"] == "defaultTenant"
+        assert item["domain"] == "http://localhost:8000"
+        assert item["shortCode"] and isinstance(item["shortCode"], str)
+        assert item["shortUrl"].endswith(item["shortCode"])
+        assert isinstance(item["createdAt"], int)
+        assert isinstance(item["expiresAt"], int)
+        assert item["expiresAt"] >= item["createdAt"]

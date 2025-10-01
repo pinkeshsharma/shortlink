@@ -12,8 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -39,19 +38,19 @@ class ShortLinkControllerTest {
     @Test
     void testCreateShortLink() throws Exception {
         Mockito.when(shortLinkService.createOrGetShortCode(
-                        anyString(), nullable(String.class), anyString(), anyString()))
+                        anyString(), nullable(String.class), anyString(), anyString(), anyLong()))
                 .thenReturn("abc123");
 
         String requestJson = """
         {
           "originalUrl": "http://example.com",
           "customCode": null,
-          "tenantId": null,
           "domain": null
         }
         """;
 
         mockMvc.perform(post("/shorten")
+                        .header("X-Tenant-ID", "defaultTenant")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())
@@ -66,7 +65,8 @@ class ShortLinkControllerTest {
         Mockito.when(shortLinkService.getByShortCode("abc123", "defaultTenant"))
                 .thenReturn(link);
 
-        mockMvc.perform(get("/s/abc123"))
+        mockMvc.perform(get("/s/abc123")
+                .header("X-Tenant-ID", "defaultTenant"))
                 .andExpect(status().isMovedPermanently())
                 .andExpect(header().string("Location", "http://example.com"));
     }

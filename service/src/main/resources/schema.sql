@@ -25,5 +25,6 @@ CREATE TABLE dlq (
     domain VARCHAR(255),
     custom_code VARCHAR(255),
     tenant_id VARCHAR(255),
-    created_at BIGINT NOT NULL    -- epoch millis
+    created_at BIGINT NOT NULL,    -- epoch millis
+    expires_at BIGINT NULL       -- epoch millis, nullable for permanent links
 );

@@ -25,3 +25,11 @@ The UI connects to the backend service through **Nginx `/api` proxy**, which can
 1. Install dependencies:
    ```powershell
    npm install
+   ```
+
+2. Start the development server:
+   ```powershell
+   npm start
+   ```
+   
+3. Open [http://localhost:3000](http://localhost:3000) in your browser.

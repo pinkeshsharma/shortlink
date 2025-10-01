@@ -24,14 +24,16 @@ public class DeadLetter {
     private String customCode;
     private String tenantId;
     private Instant createdAt = Instant.now();
+    private long expiresAt;
 
     public DeadLetter() {}
 
-    public DeadLetter(String originalUrl, String domain, String customCode, String tenantId, String reason) {
+    public DeadLetter(String originalUrl, String domain, String customCode, String tenantId, String reason, long expiresAt) {
         this.originalUrl = originalUrl;
         this.reason = reason;
         this.domain = domain;
         this.customCode = customCode;
         this.tenantId = tenantId;
+        this.expiresAt = expiresAt;
     }
 }

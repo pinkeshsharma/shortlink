@@ -7,6 +7,8 @@ CODE_REGEX = r"^[a-zA-Z0-9_-]{4,20}$"
 class ShortLinkRequest(BaseModel):
     originalUrl: HttpUrl
     customCode: Optional[str] = None
+    expiresAt: Optional[int] = None
+    domain: Optional[str] = None
 
     @field_validator("customCode")
     @classmethod
@@ -21,8 +23,11 @@ class ShortLinkRequest(BaseModel):
 class ShortLinkResponse(BaseModel):
     shortUrl: HttpUrl
     originalUrl: Optional[HttpUrl] = None
-    createdAt: Optional[int] = None  # epoch millis
-    expiresAt: Optional[int] = None  # epoch millis
+    createdAt: Optional[int] = None
+    expiresAt: Optional[int] = None
+    tenantId: Optional[str] = None
+    domain: Optional[str] = None
+    shortCode: Optional[str] = None
 
 
 class PageResponse(BaseModel):
